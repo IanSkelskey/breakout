@@ -39,6 +39,9 @@ function PlayState:enter(params)
     -- give ball random starting velocity
     self.balls[1].dx = math.random(-200, 200)
     self.balls[1].dy = math.random(-50, -60)
+
+    -- Pass it false from the exit function of the start state or paddle select (wherever recoverPoints is set)
+    self.hasKey = params.hasKey
 end
 
 function PlayState:update(dt)
@@ -47,6 +50,9 @@ function PlayState:update(dt)
         if powerup.inPlay then
             powerup:update(dt)
             if powerup:collides(self.paddle) then
+                -- Play sound
+                gSounds['powerup']:stop()
+                gSounds['powerup']:play()
                 if powerup.type == 1 then
                     -- Slow ball
 
@@ -55,8 +61,6 @@ function PlayState:update(dt)
 
                 elseif powerup.type == 3 then
                     -- Recover health
-                    gSounds['get-health']:stop()
-                    gSounds['get-health']:play()
                     if self.health < 3 then
                         self.health = self.health + 1
                     end
@@ -85,7 +89,7 @@ function PlayState:update(dt)
                     self.ballCount = self.ballCount + 2
                 elseif powerup.type == 10 then
                     --Key powerup
-
+                    self.hasKey = true
                 end
                 powerup.inPlay = false
             end
@@ -139,10 +143,15 @@ function PlayState:update(dt)
         
             -- only check collision if we're in play
             if brick.inPlay and ball:collides(brick) then
-
-                -- add to score
-                self.score = self.score + (brick.tier * 200 + brick.color * 25)
-
+                
+                if brick.isLocked then
+                    if self.hasKey then
+                        brick:unlock()
+                    end
+                else
+                    -- add to score
+                    self.score = self.score + (brick.tier * 200 + brick.color * 25)
+                end
                 -- trigger the brick's hit function, which removes it from play
                 brick:hit()
                 if brick.color == 1 and brick.tier == 0 then
@@ -179,7 +188,8 @@ function PlayState:update(dt)
                         score = self.score,
                         highScores = self.highScores,
                         ball = self.balls,
-                        recoverPoints = self.recoverPoints
+                        recoverPoints = self.recoverPoints,
+                        hasKey = false
                     })
                 end
 
@@ -277,6 +287,11 @@ function PlayState:update(dt)
 end
 
 function PlayState:render()
+    if self.hasKey then
+        love.graphics.draw(gTextures['main'], gFrames['powerups'][10],
+        8, VIRTUAL_HEIGHT - 24)
+    end
+
     for k, powerup in pairs(self.powerups) do
         if powerup.inPlay then
             powerup:render()

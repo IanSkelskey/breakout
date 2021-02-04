@@ -100,34 +100,44 @@ function Brick:hit()
         paletteColors[self.color].b,
         0
     )
-    self.psystem:emit(64)
-
-    -- sound on hit
-    gSounds['brick-hit-2']:stop()
-    gSounds['brick-hit-2']:play()
+    
+    if self.isLocked then
+        gSounds['wall-hit']:stop()
+        gSounds['wall-hit']:play()
+    else
+        self.psystem:emit(64)
+        -- sound on hit
+        gSounds['brick-hit-2']:stop()
+        gSounds['brick-hit-2']:play()
+    end
 
     -- if we're at a higher tier than the base, we need to go down a tier
     -- if we're already at the lowest color, else just go down a color
-    if self.tier > 0 then
-        if self.color == 1 then
-            self.tier = self.tier - 1
-            self.color = 5
-        else
-            self.color = self.color - 1
-        end
-    else
-        -- if we're in the first tier and the base color, remove brick from play
-        if self.color == 1 then
-            self.inPlay = false
-        else
-            self.color = self.color - 1
-        end
-    end
 
-    -- play a second layer sound if the brick is destroyed
-    if not self.inPlay then
-        gSounds['brick-hit-1']:stop()
-        gSounds['brick-hit-1']:play()
+    if self.isLocked then
+
+    else
+        if self.tier > 0 then
+            if self.color == 1 then
+                self.tier = self.tier - 1
+                self.color = 5
+            else
+                self.color = self.color - 1
+            end
+        else
+            -- if we're in the first tier and the base color, remove brick from play
+            if self.color == 1 then
+                self.inPlay = false
+            else
+                self.color = self.color - 1
+            end
+        end
+
+        -- play a second layer sound if the brick is destroyed
+        if not self.inPlay then
+            gSounds['brick-hit-1']:stop()
+            gSounds['brick-hit-1']:play()
+        end
     end
 end
 
@@ -156,4 +166,21 @@ end
 ]]
 function Brick:renderParticles()
     love.graphics.draw(self.psystem, self.x + 16, self.y + 8)
+end
+
+function Brick:unlock()
+    self.psystem:setColors(
+        paletteColors[self.color].r,
+        paletteColors[self.color].g,
+        paletteColors[self.color].b,
+        55 * (self.tier + 1),
+        paletteColors[self.color].r,
+        paletteColors[self.color].g,
+        paletteColors[self.color].b,
+        0
+    )
+    self.psystem:emit(64)
+    self.inPlay = false
+    gSounds['brick-hit-1']:stop()
+    gSounds['brick-hit-1']:play()
 end
