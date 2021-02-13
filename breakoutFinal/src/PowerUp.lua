@@ -28,8 +28,32 @@ function PowerUp:init(brick)
     -- starting dimensions
     self.width = 16
     self.height = 16
-    self.type = math.random(1,10)
+    self.type = math.random(1,11)
     self.inPlay = false
+
+    -- Power Up Graphics Encoding
+    if self.type == 1 then
+        -- Recover Health
+        self.type = 3
+    elseif self.type == 2 then
+        --Multiball
+        self.type = 9
+    elseif self.type == 3 then
+        --Key
+        self.type = 10
+    elseif self.type == 4 or self.type == 5 then
+        --Big ball
+        self.type = 8
+    elseif self.type == 6 or self.type == 7 then
+        --Small ball
+        self.type = 7
+    elseif self.type == 8 or self.type == 9 then
+        --Slow ball
+        self.type = 1
+    elseif self.type == 10 or self.type == 11 then
+        --Speed ball
+        self.type = 2
+    end
 end
 --[[
     Handles collision of powerup and other game elements

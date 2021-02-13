@@ -20,33 +20,33 @@ Brick = Class{}
 paletteColors = {
     -- blue
     [1] = {
-        ['r'] = 99,
-        ['g'] = 155,
-        ['b'] = 255
+        ['r'] = 99/255,
+        ['g'] = 155/255,
+        ['b'] = 255/255
     },
     -- green
     [2] = {
-        ['r'] = 106,
-        ['g'] = 190,
-        ['b'] = 47
+        ['r'] = 106/255,
+        ['g'] = 190/255,
+        ['b'] = 47/255
     },
     -- red
     [3] = {
-        ['r'] = 217,
-        ['g'] = 87,
-        ['b'] = 99
+        ['r'] = 217/255,
+        ['g'] = 87/255,
+        ['b'] = 99/255
     },
     -- purple
     [4] = {
-        ['r'] = 215,
-        ['g'] = 123,
-        ['b'] = 186
+        ['r'] = 215/255,
+        ['g'] = 123/255,
+        ['b'] = 186/255
     },
     -- gold
     [5] = {
-        ['r'] = 251,
-        ['g'] = 242,
-        ['b'] = 54
+        ['r'] = 251/255,
+        ['g'] = 242/255,
+        ['b'] = 54/255
     }
 }
 
@@ -59,7 +59,13 @@ function Brick:init(x, y)
     self.y = y
     self.width = 32
     self.height = 16
-    
+    self.hasPowerUp = false
+
+    seed = math.random(1,10)
+    if seed > 2 then
+        self.hasPowerUp = true
+    end
+
     -- sets default bricks to unlocked
     self.isLocked = false
     -- used to determine whether this brick should be rendered
@@ -115,7 +121,7 @@ function Brick:hit()
     -- if we're already at the lowest color, else just go down a color
 
     if self.isLocked then
-
+        
     else
         if self.tier > 0 then
             if self.color == 1 then
@@ -181,6 +187,6 @@ function Brick:unlock()
     )
     self.psystem:emit(64)
     self.inPlay = false
-    gSounds['brick-hit-1']:stop()
-    gSounds['brick-hit-1']:play()
+    gSounds['unlock']:stop()
+    gSounds['unlock']:play()
 end

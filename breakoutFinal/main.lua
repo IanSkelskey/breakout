@@ -65,6 +65,8 @@ function love.load()
         ['arrows'] = GenerateQuads(gTextures['arrows'], 24, 24),
         ['paddles'] = GenerateQuadsPaddles(gTextures['main']),
         ['balls'] = GenerateQuadsBalls(gTextures['main']),
+        ['big-balls'] = GenerateQuadsBigBalls(gTextures['main']),
+        ['small-balls'] = GenerateQuadsSmallBalls(gTextures['main']),
         ['bricks'] = GenerateQuadsBricks(gTextures['main']),
         ['hearts'] = GenerateQuads(gTextures['hearts'], 10, 9),
         ['powerups'] = GenerateQuadsPowerUps(gTextures['main'])
@@ -95,6 +97,7 @@ function love.load()
         ['high-score'] = love.audio.newSource('sounds/high_score.wav','static'),
         ['pause'] = love.audio.newSource('sounds/pause.wav','static'),
         ['powerup'] = love.audio.newSource('sounds/powerup.wav', 'static'),
+        ['unlock'] = love.audio.newSource('sounds/unlock.wav', 'static'),
 
         ['music'] = love.audio.newSource('sounds/music.wav','static')
     }
@@ -210,8 +213,10 @@ function love.draw()
     -- use the state machine to defer rendering to the current state we're in
     gStateMachine:render()
     
-    -- display FPS for debugging; simply comment out to remove
-    displayFPS()
+    if love.keyboard.wasPressed('tab') then
+        -- display FPS for debugging; simply comment out to remove
+        displayFPS()
+    end
 
     
     push:apply('end')
@@ -305,11 +310,34 @@ function displayBallCount(ballCount)
     love.graphics.print('Ball Count: ' .. tostring(ballCount), 5, 15)
 end
 
+function displayBrickCount(brickCount)
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print('Brick Count: ' .. tostring(brickCount), 5, 25)
+end
+
 function displayRecoverPoints(recoverPoints)
     love.graphics.setFont(gFonts['small'])
     love.graphics.setColor(0, 255, 0, 255)
-    love.graphics.print('Points to recover: ' .. tostring(recoverPoints), 5, 25)
+    love.graphics.print('Points to recover: ' .. tostring(recoverPoints), 5, 35)
 end
+
+function displayBallSpeeds(balls)
+    for k, ball in pairs(balls) do
+        love.graphics.setFont(gFonts['small'])
+        love.graphics.setColor(0, 255, 0, 255)
+        love.graphics.print(tostring(k) .. 'Ball Speed: ' .. tostring(ball.speed), 5, 35 + k*10)
+    end
+end
+
+function debugMode(ballCount, brickCount, recoverPoints, balls)
+    displayFPS()
+    displayBallCount(ballCount)
+    displayBrickCount(brickCount)
+    displayRecoverPoints(recoverPoints)
+    displayBallSpeeds(balls)
+end
+
 --[[
     Simply renders the player's score at the top right, with left-side padding
     for the score number.

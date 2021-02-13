@@ -126,6 +126,47 @@ function GenerateQuadsBalls(atlas)
     return quads
 end
 
+function GenerateQuadsSmallBalls(atlas)
+    local x = 0
+    local y = 224
+
+    local counter = 1
+    local quads = {}
+
+    for i = 0, 3 do
+        quads[counter] = love.graphics.newQuad(x, y, 5, 5, atlas:getDimensions())
+        x = x + 5
+        counter = counter + 1
+    end
+
+    x = 0
+    y = 229
+
+    for i = 0, 2 do
+        quads[counter] = love.graphics.newQuad(x, y, 5, 5, atlas:getDimensions())
+        x = x + 5
+        counter = counter + 1
+    end
+
+    return quads
+end
+
+function GenerateQuadsBigBalls(atlas)
+    local x = 0
+    local y = 208
+
+    local counter = 1
+    local quads = {}
+
+    for i = 0, 6 do
+        quads[counter] = love.graphics.newQuad(x, y, 11, 11, atlas:getDimensions())
+        x = x + 11
+        counter = counter + 1
+    end
+
+    return quads
+end
+
 function GenerateQuadsPowerUps(atlas)
     local x = 0
     local y = 192

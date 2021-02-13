@@ -46,6 +46,7 @@ function PaddleSelectState:update(dt)
         gSounds['confirm']:play()
 
         gStateMachine:change('serve', {
+            ball = Ball(),
             paddle = Paddle(self.currentPaddle),
             bricks = LevelMaker.createMap(1),
             health = 3,
@@ -53,7 +54,8 @@ function PaddleSelectState:update(dt)
             highScores = self.highScores,
             level = 1,
             recoverPoints = 5000,
-            hasKey = false
+            hasKey = false,
+            debugOn = false
         })
     end
 

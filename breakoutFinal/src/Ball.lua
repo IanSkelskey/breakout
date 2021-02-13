@@ -17,17 +17,21 @@ Ball = Class{}
 
 function Ball:init(skin)
     -- simple positional and dimensional variables
-    self.width = 8
-    self.height = 8
+    self.width = BALL_SIZE
+    self.height = BALL_SIZE
 
     -- these variables are for keeping track of our velocity on both the
     -- X and Y axis, since the ball can move in two dimensions
     self.dy = 0
     self.dx = 0
+    self.speed = 0
+
 
     -- this will effectively be the color of our ball, and we will index
     -- our table of Quads relating to the global block texture using this
     self.skin = skin
+
+    self.size = 1
 
     self.inPlay = true
 end
@@ -64,6 +68,19 @@ function Ball:reset()
 end
 
 function Ball:update(dt)
+    self.speed = math.sqrt((self.dx)^2 + (self.dy)^2)
+
+    if self.size == 0 then
+        self.height = SMALL_BALL_SIZE
+        self.width = SMALL_BALL_SIZE
+    elseif self.size == 1 then
+        self.height = BIG_BALL_SIZE
+        self.width = BIG_BALL_SIZE
+    else
+        self.height = BALL_SIZE
+        self.width = BALL_SIZE
+    end
+
     self.x = self.x + self.dx * dt
     self.y = self.y + self.dy * dt
 
@@ -74,8 +91,8 @@ function Ball:update(dt)
         gSounds['wall-hit']:play()
     end
 
-    if self.x >= VIRTUAL_WIDTH - 8 then
-        self.x = VIRTUAL_WIDTH - 8
+    if self.x >= VIRTUAL_WIDTH - self.width then
+        self.x = VIRTUAL_WIDTH - self.width
         self.dx = -self.dx
         gSounds['wall-hit']:play()
     end
@@ -90,6 +107,14 @@ end
 function Ball:render()
     -- gTexture is our global texture for all blocks
     -- gBallFrames is a table of quads mapping to each individual ball skin in the texture
-    love.graphics.draw(gTextures['main'], gFrames['balls'][self.skin],
-        self.x, self.y)
+    if self.size == 2 then
+            love.graphics.draw(gTextures['main'], gFrames['big-balls'][self.skin],
+            self.x, self.y)
+    elseif self.size == 1 then
+        love.graphics.draw(gTextures['main'], gFrames['balls'][self.skin],
+            self.x, self.y)
+    elseif self.size == 0 then
+        love.graphics.draw(gTextures['main'], gFrames['small-balls'][self.skin],
+            self.x, self.y)
+    end
 end

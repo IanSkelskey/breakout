@@ -23,3 +23,8 @@ PADDLE_SPEED = 200
 
 -- power up fall speed
 POWERUP_SPEED = 60
+
+-- Ball Sizes (Diameter)
+SMALL_BALL_SIZE = 5
+BALL_SIZE = 8
+BIG_BALL_SIZE = 11

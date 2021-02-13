@@ -26,7 +26,7 @@ function PlayState:enter(params)
     self.health = params.health
     self.score = params.score
     self.highScores = params.highScores
-    --self.ball = params.ball
+
     self.level = params.level
 
     self.recoverPoints = params.recoverPoints
@@ -42,6 +42,14 @@ function PlayState:enter(params)
 
     -- Pass it false from the exit function of the start state or paddle select (wherever recoverPoints is set)
     self.hasKey = params.hasKey
+    self.brickCount = 0
+    for k, brick in pairs(self.bricks) do
+        if brick.inPlay then
+            self.brickCount = self.brickCount + 1
+        end
+    end
+
+    self.debugOn = params.debugOn
 end
 
 function PlayState:update(dt)
@@ -49,16 +57,26 @@ function PlayState:update(dt)
     for k, powerup in pairs(self.powerups) do
         if powerup.inPlay then
             powerup:update(dt)
+            --[[
+                Power Up Definitions
+            ]]
             if powerup:collides(self.paddle) then
+                self.score = self.score + 50
                 -- Play sound
                 gSounds['powerup']:stop()
                 gSounds['powerup']:play()
                 if powerup.type == 1 then
                     -- Slow ball
-
+                    for k, ball in pairs(self.balls) do
+                        ball.dx = ball.dx * .85
+                        ball.dy = ball.dy * .85
+                    end
                 elseif powerup.type == 2 then
                     -- Speed ball
-
+                    for k, ball in pairs(self.balls) do
+                        ball.dx = ball.dx * 1.15
+                        ball.dy = ball.dy * 1.15
+                    end
                 elseif powerup.type == 3 then
                     -- Recover health
                     if self.health < 3 then
@@ -69,16 +87,40 @@ function PlayState:update(dt)
                 elseif powerup.type == 5 then
                 elseif powerup.type == 6 then
                 elseif powerup.type == 7 then
+                    --Small Ball
+                    for k, ball in pairs(self.balls) do
+                        if ball.size > 0 then
+                            ball.size = ball.size - 1
+                        end
+                    end
                 elseif powerup.type == 8 then
+                    --Big Ball
+                    for k, ball in pairs(self.balls) do
+                        if ball.size < 2 then
+                            ball.size = ball.size + 1
+                        end
+                    end
                 elseif powerup.type == 9 then
                     -- Multi-ball
                     b1 = Ball(self.balls[1].skin)
+                    b2 = Ball(self.balls[1].skin)
+                    --Make sure that new balls match size of OG ball
+                    if self.balls[1].size == 2 then
+                        b1.size = 2
+                        b2.size = 2
+                    elseif self.balls[1].size == 0 then
+                        b1.size = 0
+                        b2.size = 0
+                    else
+                        b1.size = 1
+                        b2.size = 1
+                    end
 				    b1.x = self.balls[1].x
 				    b1.y = self.balls[1].y
 				    b1.dx = math.random(-200, 200) 
 				    b1.dy = math.random(-50, -60)
 				
-				    b2 = Ball(self.balls[1].skin)
+
 				    b2.x = self.balls[1].x
 				    b2.y = self.balls[1].y				
 				    b2.dx = math.random(-200, 200) 
@@ -92,6 +134,7 @@ function PlayState:update(dt)
                     self.hasKey = true
                 end
                 powerup.inPlay = false
+                table.remove(self.powerups, k)
             end
         end
     end
@@ -119,7 +162,7 @@ function PlayState:update(dt)
 
         if ball:collides(self.paddle) then
             -- raise ball above paddle in case it goes below it, then reverse dy
-            ball.y = self.paddle.y - 8
+            ball.y = self.paddle.y - ball.width
             ball.dy = -ball.dy
 
             --
@@ -140,13 +183,20 @@ function PlayState:update(dt)
 
         -- detect collision across all bricks with the ball
         for k, brick in pairs(self.bricks) do
-        
+
             -- only check collision if we're in play
             if brick.inPlay and ball:collides(brick) then
                 
                 if brick.isLocked then
                     if self.hasKey then
                         brick:unlock()
+                        self.hasKey = false
+                    else
+                        if self.brickCount == 1 then
+                            powerup = PowerUp(brick)
+                            powerup.inPlay = true
+                            table.insert(self.powerups,powerup)
+                        end
                     end
                 else
                     -- add to score
@@ -154,13 +204,14 @@ function PlayState:update(dt)
                 end
                 -- trigger the brick's hit function, which removes it from play
                 brick:hit()
-                if brick.color == 1 and brick.tier == 0 then
-
-                    powerup = PowerUp(brick)
-                    powerup.inPlay = true
-                    table.insert(self.powerups,powerup)
+                if not brick.inPlay then
+                    self.brickCount = self.brickCount - 1
+                    if brick.hasPowerUp then
+                        powerup = PowerUp(brick)
+                        powerup.inPlay = true
+                        table.insert(self.powerups,powerup)
+                    end
                 end
-
                 -- if we have enough points, recover a point of health
                 if self.score > self.recoverPoints then
                     --  increase paddle size
@@ -169,10 +220,13 @@ function PlayState:update(dt)
                     end
                     -- can't go above 3 health
                     self.health = math.min(3, self.health + 1)
-
-                    -- multiply recover points by 2
-                    self.recoverPoints = math.min(100000, self.recoverPoints * 2)
-
+                    
+                    if self.score < 100000 then
+                        -- multiply recover points by 2
+                        self.recoverPoints = math.min(100000, self.recoverPoints * 2)
+                    else
+                        self.recoverPoints = self.recoverPoints + 100000
+                    end
                     -- play recover sound effect
                     gSounds['recover']:play()
                 end
@@ -189,7 +243,8 @@ function PlayState:update(dt)
                         highScores = self.highScores,
                         ball = self.balls,
                         recoverPoints = self.recoverPoints,
-                        hasKey = false
+                        hasKey = self.hasKey,
+                        debugOn = self.debugOn
                     })
                 end
 
@@ -208,7 +263,7 @@ function PlayState:update(dt)
                 
                     -- flip x velocity and reset position outside of brick
                     ball.dx = -ball.dx
-                    ball.x = brick.x - 8
+                    ball.x = brick.x - ball.width
             
                 -- right edge; only check if we're moving left, , and offset the check by a couple of pixels
                 -- so that flush corner hits register as Y flips, not X flips
@@ -223,7 +278,7 @@ function PlayState:update(dt)
                 
                     -- flip y velocity and reset position outside of brick
                     ball.dy = -ball.dy
-                    ball.y = brick.y - 8
+                    ball.y = brick.y - ball.width
             
                 -- bottom edge if no X collisions or top collision, last possibility
                 else
@@ -250,6 +305,11 @@ function PlayState:update(dt)
         table.remove(self.balls, k)
             self.ballCount = self.ballCount - 1
             if self.ballCount < 1 then
+                for k, brick in pairs(self.bricks) do
+                    if not brick.inPlay then
+                        table.remove(self.bricks, k)
+                    end
+                end
                 self.health = self.health - 1
                 gSounds['hurt']:play()
 
@@ -263,14 +323,18 @@ function PlayState:update(dt)
                         highScores = self.highScores
                     })
                 else
+
                     gStateMachine:change('serve', {
+                        ball = Ball(),
                         paddle = self.paddle,
                         bricks = self.bricks,
                         health = self.health,
                         score = self.score,
                         highScores = self.highScores,
                         level = self.level,
-                        recoverPoints = self.recoverPoints
+                        recoverPoints = self.recoverPoints,
+                        hasKey = self.hasKey,
+                        debugOn = self.debugOn
                     })
                 end
             end
@@ -283,6 +347,12 @@ function PlayState:update(dt)
 
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
+    elseif love.keyboard.wasPressed('tab') then
+        if self.debugOn then
+            self.debugOn = false
+        else
+            self.debugOn = true
+        end
     end
 end
 
@@ -322,10 +392,10 @@ function PlayState:render()
         love.graphics.setFont(gFonts['large'])
         love.graphics.printf("PAUSED", 0, VIRTUAL_HEIGHT / 2 - 16, VIRTUAL_WIDTH, 'center')
     end
-        -- display ballCount for debugging
-    displayBallCount(self.ballCount)
 
-    displayRecoverPoints(self.recoverPoints)
+    if self.debugOn then
+        debugMode(self.ballCount, self.brickCount, self.recoverPoints, self.balls)
+    end
 
 end
 
